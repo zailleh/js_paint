@@ -2,9 +2,39 @@ body, div {
   border: 0;
   margin: 0;
   padding: 0;
-  cursor: pointer;
 }
 
-div {
+.pallet {
+  position: fixed;
+  padding: 4px;
+  border-radius: .5vw;
+  outline: 1px solid gray;
+  z-index: 1;
+  top: 20vh;
+  left: 2vw;
+  width: 12vw;
+  border: 1px solid rgba(0,0,0,0.5);
+  outline: none;
+  background-color: white;
+  box-shadow: 5px 10px #888888;
+  cursor: move;
+}
+
+.palletColour {
+  width: 4vw;
+  height: 4vw;
+  margin: 1vw;
+  float: left;
+  outline: 1px solid rgba(0,0,0,0.5);
+  cursor: crosshair;
+}
+
+.canvas {
+  cursor: crosshair;
+}
+
+
+.pixel {
+  float: left;
   outline: 1px solid rgba(0,0,0,0.1);
 }
