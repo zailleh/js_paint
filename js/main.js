@@ -42,20 +42,47 @@ const makeCanvas = function () {
 
   // adjust background image size to scale
   resizeBgGrid();
-  window.addEventListener( 'resize ', resizeBgGrid );
+  window.addEventListener( 'resize' , resizeBgGrid );
 };
 
 const resizeBgGrid = function () {
   // adjust background image size to scale
   // calculate to pixels
-  // const bgSzH = ( canvas.clientWidth / canvasWidth * pixelSize ) + "px";
+  // const bgSz = Math.floor( canvas.clientWidth / canvasWidth * pixelSize ) + "px";
   // const bgSzW = ( canvas.clientHeight / canvasHeight * pixelSize ) + "px";
 
   // calculate to %
-  const bgSzH = ( pixelSize / canvasWidth * 100  ) + "%";
-  const bgSzW = ( pixelSize / canvasHeight * 100 ) + "%";
+  //const bgSz = canvas.clientWidth / ( canvasWidth / pixelSize) / canvas.clientWidth * 100
   console.log( ' resizing ' );
-  canvas.style.backgroundSize = bgSzH + " " + bgSzW;
+
+
+
+
+  // check to see if height will be greater than the view size if so, calculate new size using height first
+  let newWidth, newHeight, sizeRatio, pixelSizeAdjusted;
+
+  if ( window.innerWidth * 0.75 > window.innerHeight ) {
+    console.log( 'calculating with height', window.innerHeight );
+    // calculate new canvas size using height as basis
+    sizeRatio = window.innerHeight / canvasHeight;
+    pixelSizeAdjusted = Math.floor( sizeRatio * pixelSize );
+
+    newHeight = Math.floor( window.innerHeight / pixelSizeAdjusted / 3 ) * pixelSizeAdjusted * 3; // the 3 allows us to keep a good 4:3 ratio for the canvas.
+    newWidth = newHeight / 3 * 4;
+  } else {
+    console.log( 'calculating with width', window.innerWidth );
+    // calculate new canvas size using width as basis
+    sizeRatio = window.innerWidth / canvasWidth;
+    pixelSizeAdjusted = Math.floor( sizeRatio * pixelSize );
+
+    newWidth = Math.floor( window.innerWidth / pixelSizeAdjusted / 4 ) * pixelSizeAdjusted * 4; // the 4 allows us to keep a good 4:3 ratio for the canvas.
+    newHeight = newWidth * 0.75;
+  }
+
+  canvas.style.width = newWidth + "px";
+  canvas.style.height = newHeight + "px";
+
+  canvas.style.backgroundSize = pixelSizeAdjusted + "px " + pixelSizeAdjusted + "px";
 }
 
 // function for evenet listener on mousedown -- starts drawing a line
@@ -116,7 +143,7 @@ const drawPixel = function( el, size = 16) { //default pixel size is 16 screen p
 
    // adjust cursor y coords to include any offset caused during centering
   y = y-canvas.getBoundingClientRect().top
-
+  x = x-canvas.getBoundingClientRect().left
   // normalize input so we only draw in 'pixels';
   x = normaliseMouseInput( x, size, canvasWidth, canvas.clientWidth );
   y = normaliseMouseInput( y, size, canvasHeight, canvas.clientHeight );

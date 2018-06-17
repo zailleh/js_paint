@@ -33,7 +33,6 @@ body, div {
 .canvas {
   cursor: crosshair;
   display: block;
-  width: 100vw;
   height: 75vw;
   background-color: white;
   position: fixed;
