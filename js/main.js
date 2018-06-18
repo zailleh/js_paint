@@ -7,14 +7,46 @@ console.log('JS Paint starting...');
 const colours = ['black','white','gray','red','green','yellow','blue','purple','brown','orange'];
 const canvas = document.createElement('canvas'); canvas.className = 'canvas'
 const pen = canvas.getContext('2d');
-const pallet = document.createElement('div'); pallet.className = 'pallet'
+const colourPallet = document.createElement('div'); colourPallet.className = 'pallet'
+const toolPallet = document.createElement('div'); toolPallet.className = 'pallet'
+const tools = [
+  {
+    name: "Pencil",
+    image: "res/pencil.png"
+  },
+  {
+    name: "Eraser",
+    image: "res/eraser.png"
+  }
+]
 
+// history object used to record actions and undo!
+const history = {
+  actions: [],
+
+  addHistory: function (x, y, oldColour, newColour, activity) {
+    // add a new action to history
+    this.actions.push(
+      {
+        x: x,
+        y: y,
+        oldColour: oldColour,
+        newColour: newColour,
+        tool: activity
+      }
+    )
+  }
+}
 
 // changeable
 let canvasWidth = 640; // width in pixels of canvas before scaling
 let canvasHeight = 480; // height in pixels of canvas before scaling
 let pixelSize = 16; // will be used for css styles to set width and height
 let pencilColour = 'black'; // default colour is black, can be changed
+
+
+
+//********************* Functions for creating the interface *******************
 
 // create canvas for paint pixels
 const makeCanvas = function () {
@@ -46,17 +78,6 @@ const makeCanvas = function () {
 };
 
 const resizeBgGrid = function () {
-  // adjust background image size to scale
-  // calculate to pixels
-  // const bgSz = Math.floor( canvas.clientWidth / canvasWidth * pixelSize ) + "px";
-  // const bgSzW = ( canvas.clientHeight / canvasHeight * pixelSize ) + "px";
-
-  // calculate to %
-  //const bgSz = canvas.clientWidth / ( canvasWidth / pixelSize) / canvas.clientWidth * 100
-  console.log( ' resizing ' );
-
-
-
 
   // check to see if height will be greater than the view size if so, calculate new size using height first
   let newWidth, newHeight, sizeRatio, pixelSizeAdjusted;
@@ -85,25 +106,10 @@ const resizeBgGrid = function () {
   canvas.style.backgroundSize = pixelSizeAdjusted + "px " + pixelSizeAdjusted + "px";
 }
 
-// function for evenet listener on mousedown -- starts drawing a line
-const startDraw = function ( el ) {
-  drawPixel( el );
-
-  // add event listners to draw pixel when moving mouse or touch
-  canvas.addEventListener( 'mousemove', drawPixel );
-  canvas.addEventListener( 'touchmove', drawPixel, {passive: true} );
-}
-
-// function for evenet listener on mousedown -- ends drawing a line
-const endDraw = function () {
-  canvas.removeEventListener( 'mousemove', drawPixel );
-  canvas.removeEventListener( 'touchmove', drawPixel, {passive: true} );
-}
-
 // create a colour pallet
-const makePallet = function () {
-  pallet.setAttribute("draggable", true); // to be used to allow someone to drag pallet arround;
-  pallet.addEventListener("mouseup", endDraw ); // used to make sure endDraw is fired if mouse let go on pallet
+const makeColourPallet = function () {
+  colourPallet.setAttribute("draggable", true); // to be used to allow someone to drag pallet arround;
+  colourPallet.addEventListener("mouseup", endDraw ); // used to make sure endDraw is fired if mouse let go on pallet
 
   // TODO: add drag events and function to move this pallet on the screen
 
@@ -112,11 +118,52 @@ const makePallet = function () {
     palletColour.style.backgroundColor = colours[i];
     palletColour.addEventListener( 'click', setPencilColour );
     palletColour.className = 'palletColour';
-    pallet.appendChild( palletColour );
+    colourPallet.appendChild( palletColour );
   }
 
-  document.body.appendChild( pallet );
+  document.body.appendChild( colourPallet );
 };
+
+// used to make tool pallet
+const makeToolPallet = function () {
+  toolPallet.setAttribute("draggable", true); // to be used to allow someone to drag pallet arround;
+  toolPallet.addEventListener("mouseup", endDraw ); // used to make sure endDraw is fired if mouse let go on pallet
+
+  // TODO: add drag events and function to move this pallet on the screen
+
+  for ( let i = 0; i < tools.length; i++ ) {
+    const tool = document.createElement( 'div' );
+    tool.style.background = `url(${tools[i].image})`;
+    tool.style.backgroundSize = "cover";
+    tool.setAttribute( 'data-id', i );
+    tool.addEventListener( 'click', selectTool );
+    tool.className = 'palletColour';
+    toolPallet.appendChild( tool );
+  }
+
+  document.body.appendChild( toolPallet );
+}
+
+
+
+//********************* Functions for actions *******************
+
+// function for evenet listener on mousedown -- starts drawing a line
+const startDraw = function ( el ) {
+  drawPixel( el );
+
+  // add event listners to draw pixel when moving mouse or touch
+  canvas.addEventListener( 'mousemove', drawPixel );
+  canvas.addEventListener( 'touchmove', touchCoords, {passive: true} );
+}
+
+// function for evenet listener on mousedown -- ends drawing a line
+const endDraw = function () {
+  canvas.removeEventListener( 'mousemove', drawPixel );
+  canvas.removeEventListener( 'touchmove', touchCoords, {passive: true} );
+}
+
+
 
 
 // function to set our new pencil colour when selected
@@ -130,7 +177,26 @@ const normaliseMouseInput = function ( pos, size, unScaledRes, clientRes ) {
   return ( Math.ceil( pos / size / clientRes * unScaledRes ) * size ) - size;
 }
 
+// used for touch move event only!
+const touchCoords = function ( touchEvent ) {
+  drawPixel(touchEvent.touches[0]);
+}
 
+
+const selectTool = function () {
+  const tool = tools[ this.getAttribute( 'data-id' ) ];
+  console.log('changing tool');
+  console.log(tool);
+  switch ( tool.name ) {
+    case "Eraser":
+      pencilColour = 'rgba(0, 0, 0, 0)';
+      break;
+    default:
+      pencilColour = 'black';
+  }
+}
+
+// make our changes to the canvas!
 const drawPixel = function( el, size = 16) { //default pixel size is 16 screen pixels
   let x = el.pageX;
   let y = el.pageY;
@@ -165,4 +231,5 @@ const drawPixel = function( el, size = 16) { //default pixel size is 16 screen p
 
 
 makeCanvas();
-makePallet();
+makeColourPallet();
+makeToolPallet();
