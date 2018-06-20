@@ -7,8 +7,8 @@ console.log('JS Paint starting...');
 const colours = ['black','white','gray','red','green','yellow','blue','purple','brown','orange'];
 const canvas = document.createElement('canvas'); canvas.className = 'canvas'
 const pen = canvas.getContext('2d');
-const colourPallet = document.createElement('div'); colourPallet.className = 'pallet'
-const toolPallet = document.createElement('div'); toolPallet.className = 'pallet'
+const colourPallet = document.createElement('div'); colourPallet.className = 'pallet colours'
+const toolPallet = document.createElement('div'); toolPallet.className = 'pallet tools'
 const tools = [
   {
     name: "Pencil",
@@ -83,7 +83,7 @@ const resizeBgGrid = function () {
   let newWidth, newHeight, sizeRatio, pixelSizeAdjusted;
 
   if ( window.innerWidth * 0.75 > window.innerHeight ) {
-    console.log( 'calculating with height', window.innerHeight );
+    // console.log( 'calculating with height', window.innerHeight );
     // calculate new canvas size using height as basis
     sizeRatio = window.innerHeight / canvasHeight;
     pixelSizeAdjusted = Math.floor( sizeRatio * pixelSize );
@@ -91,7 +91,7 @@ const resizeBgGrid = function () {
     newHeight = Math.floor( window.innerHeight / pixelSizeAdjusted / 3 ) * pixelSizeAdjusted * 3; // the 3 allows us to keep a good 4:3 ratio for the canvas.
     newWidth = newHeight / 3 * 4;
   } else {
-    console.log( 'calculating with width', window.innerWidth );
+    // console.log( 'calculating with width', window.innerWidth );
     // calculate new canvas size using width as basis
     sizeRatio = window.innerWidth / canvasWidth;
     pixelSizeAdjusted = Math.floor( sizeRatio * pixelSize );
@@ -111,13 +111,14 @@ const makeColourPallet = function () {
   colourPallet.setAttribute("draggable", true); // to be used to allow someone to drag pallet arround;
   colourPallet.addEventListener("mouseup", endDraw ); // used to make sure endDraw is fired if mouse let go on pallet
 
-  // TODO: add drag events and function to move this pallet on the screen
+  colourPallet.addEventListener( "drag", dragPallet );
+  colourPallet.addEventListener( "dragstart", startingDrag );
 
   for ( let i = 0; i < colours.length; i++ ) {
     const palletColour = document.createElement( 'div' );
     palletColour.style.backgroundColor = colours[i];
     palletColour.addEventListener( 'click', setPencilColour );
-    palletColour.className = 'palletColour';
+    palletColour.className = 'palletColour ';
     colourPallet.appendChild( palletColour );
   }
 
@@ -126,9 +127,11 @@ const makeColourPallet = function () {
 
 // used to make tool pallet
 const makeToolPallet = function () {
-  toolPallet.setAttribute("draggable", true); // to be used to allow someone to drag pallet arround;
-  toolPallet.addEventListener("mouseup", endDraw ); // used to make sure endDraw is fired if mouse let go on pallet
+  toolPallet.setAttribute( "draggable", true ); // to be used to allow someone to drag pallet arround;
+  toolPallet.addEventListener( "mouseup", endDraw ); // used to make sure endDraw is fired if mouse let go on pallet
 
+  toolPallet.addEventListener( "drag", dragPallet );
+  toolPallet.addEventListener( "dragstart", startingDrag );
   // TODO: add drag events and function to move this pallet on the screen
 
   for ( let i = 0; i < tools.length; i++ ) {
@@ -182,7 +185,7 @@ const touchCoords = function ( touchEvent ) {
   drawPixel(touchEvent.touches[0]);
 }
 
-
+// tool select function
 const selectTool = function () {
   const tool = tools[ this.getAttribute( 'data-id' ) ];
   console.log('changing tool');
@@ -196,18 +199,46 @@ const selectTool = function () {
   }
 }
 
+let dragOffset = {x: 0, y:0};
+
+const startingDrag = function ( ev ) {
+  let offset = this.getBoundingClientRect()
+
+  dragOffset.x = ev.clientX - offset.left;
+  dragOffset.y = ev.clientY - offset.top;
+}
+
+// function for dragging pallets!
+const dragPallet = function (ev) {
+  // don't do anything if the x and y are 0
+  if (ev.clientX === 0 && ev.clientY === 0) {
+    return;
+  }
+
+  console.log(ev);
+  // new box position needs to be cursor position - difference between box and cursor;
+  let newX = ev.clientX - dragOffset.x
+  let newY = ev.clientY - dragOffset.y
+
+  this.style.left = newX + "px";
+  this.style.top = newY + "px";
+
+  //console.log( offset );
+
+}
+
 // make our changes to the canvas!
 const drawPixel = function( el, size = 16) { //default pixel size is 16 screen pixels
   let x = el.pageX;
   let y = el.pageY;
 
-  console.log( 'woot, drawing! x:',x,'y:',y);
+  // console.log( 'woot, drawing! x:',x,'y:',y);
   // reset pencil space and setup pencil
   pen.beginPath();
   pen.fillStyle = pencilColour;
   pen.lineHeight = 0;
 
-   // adjust cursor y coords to include any offset caused during centering
+  // adjust cursor y coords to include any offset caused during centering
   y = y-canvas.getBoundingClientRect().top
   x = x-canvas.getBoundingClientRect().left
   // normalize input so we only draw in 'pixels';

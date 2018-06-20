@@ -11,14 +11,24 @@ body, div {
   border-radius: .5vw;
   outline: 1px solid gray;
   z-index: 1;
-  top: 20vh;
-  left: 2vw;
   width: 12vw;
   border: 1px solid rgba(0,0,0,0.5);
   outline: none;
   background-color: white;
-  box-shadow: 5px 10px #888888;
+  box-shadow: 5px 10px rgba(0,0,0,0.5);
   cursor: move;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tools {
+  top: 10vh;
+  left: 2vw;
+}
+
+.colours {
+  top: 20vh;
+  left: 2vw;
 }
 
 .palletColour {
