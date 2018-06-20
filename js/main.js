@@ -106,6 +106,16 @@ const resizeBgGrid = function () {
   canvas.style.backgroundSize = pixelSizeAdjusted + "px " + pixelSizeAdjusted + "px";
 }
 
+// touch event add/remove Functions
+const addTouchStartEvents = function ( touchEvent ) {
+  console.log( touchEvent );
+  this.addEventListener( 'touchmove', touchCoordsDrag )
+}
+
+const removeTouchEndEvents = function () {
+  this.removeEventListener( 'touchmove', touchCoordsDrag )
+}
+
 // create a colour pallet
 const makeColourPallet = function () {
   colourPallet.setAttribute("draggable", true); // to be used to allow someone to drag pallet arround;
@@ -113,6 +123,10 @@ const makeColourPallet = function () {
 
   colourPallet.addEventListener( "drag", dragPallet );
   colourPallet.addEventListener( "dragstart", startingDrag );
+
+  // touch move
+  colourPallet.addEventListener('touchstart', addTouchStartEvents, {passive: true});
+  colourPallet.addEventListener('touchend', removeTouchEndEvents, {passive: true});
 
   for ( let i = 0; i < colours.length; i++ ) {
     const palletColour = document.createElement( 'div' );
@@ -132,7 +146,10 @@ const makeToolPallet = function () {
 
   toolPallet.addEventListener( "drag", dragPallet );
   toolPallet.addEventListener( "dragstart", startingDrag );
-  // TODO: add drag events and function to move this pallet on the screen
+
+  // touch move
+  toolPallet.addEventListener('touchstart', addTouchStartEvents, {passive: true});
+  toolPallet.addEventListener('touchend', removeTouchEndEvents, {passive: true});
 
   for ( let i = 0; i < tools.length; i++ ) {
     const tool = document.createElement( 'div' );
@@ -157,13 +174,13 @@ const startDraw = function ( el ) {
 
   // add event listners to draw pixel when moving mouse or touch
   canvas.addEventListener( 'mousemove', drawPixel );
-  canvas.addEventListener( 'touchmove', touchCoords, {passive: true} );
+  canvas.addEventListener( 'touchmove', touchCoordsPaint, {passive: true} );
 }
 
 // function for evenet listener on mousedown -- ends drawing a line
 const endDraw = function () {
   canvas.removeEventListener( 'mousemove', drawPixel );
-  canvas.removeEventListener( 'touchmove', touchCoords, {passive: true} );
+  canvas.removeEventListener( 'touchmove', touchCoordsPaint, {passive: true} );
 }
 
 
@@ -181,8 +198,14 @@ const normaliseMouseInput = function ( pos, size, unScaledRes, clientRes ) {
 }
 
 // used for touch move event only!
-const touchCoords = function ( touchEvent ) {
-  drawPixel(touchEvent.touches[0]);
+const touchCoordsPaint = function ( touchEvent ) {
+  drawPixel( touchEvent.touches[0] );
+}
+
+// used for moving pallets only!
+const touchCoordsDrag = function ( touchEvent ) {
+  dragPallet( touchEvent.touches[0] );
+  console.log ( touchEvent );
 }
 
 // tool select function
@@ -202,7 +225,7 @@ const selectTool = function () {
 let dragOffset = {x: 0, y:0};
 
 const startingDrag = function ( ev ) {
-  let offset = this.getBoundingClientRect()
+  let offset = ev.target.getBoundingClientRect()
 
   dragOffset.x = ev.clientX - offset.left;
   dragOffset.y = ev.clientY - offset.top;
@@ -215,13 +238,13 @@ const dragPallet = function (ev) {
     return;
   }
 
-  console.log(ev);
+  //console.log(ev);
   // new box position needs to be cursor position - difference between box and cursor;
   let newX = ev.clientX - dragOffset.x
   let newY = ev.clientY - dragOffset.y
 
-  this.style.left = newX + "px";
-  this.style.top = newY + "px";
+  ev.target.style.left = newX + "px";
+  ev.target.style.top = newY + "px";
 
   //console.log( offset );
 
